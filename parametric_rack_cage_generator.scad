@@ -1,6 +1,6 @@
 /*
 
- Parametric Rack Cage Generator
+ Parametric Rack Cage Generator v. 0.1 (10 Aug 2025)
  --------------------------------------------------------------------------------
  Copyright © 2025 by WebMaka - this file is licensed under CC BY-NC-SA 4.0.
  To view a copy of this license, visit
@@ -18,7 +18,16 @@
 
    https://patreon.com/webmaka
 
+ 
+ 
+ Patch Notes
+ -------------------------------------------------------------------------------- 
+ 0.1 - 10 Aug 2025 
+   Initial Release
+ 
 */
+
+
 
 // Customizer setup
 
@@ -40,7 +49,7 @@ device_clearance = 1; // [0.0:0.25:5.0]
 
 /* [Options] */
 
-// Rack width (inches) - NOTE: 6.33" and 9.5" are 1/3-width and 1/2-width for a 19" rack. Une in conjunction with the bolt-together faceplate option below.
+// Rack width (inches) - NOTE: 6.33" and 9.5" are 1/3-width and 1/2-width for a 19" rack. Use in conjunction with the bolt-together faceplate option below.
 rack_width = 10; // [6,6.33,9.5,10,19]
 
 // Bolt-together faceplate ears - adds a mounting ear on one or both sides for mounting multiple devices into a single 19" wide faceplate - NOTE: For 19" racks, set rack width above to 9.5 for two-part faceplates or 6.33 for three-part faceplates
@@ -90,25 +99,6 @@ module two_rounded_corner_plate(plate_height, plate_width, plate_thickness, corn
             translate([(plate_width / 2), 0-(plate_height / 2), 0])
                 circle(r=0.001, $fn=this_fn);
             translate([(plate_width / 2), (plate_height / 2), 0])
-                circle(r=0.001, $fn=this_fn);
-        }
-}
-
-// Create a trapezoidal plate with two rounded corners (e.g., support frame)
-// This requires a major and minor width, with the major being wide and the
-// minor having rounded corners.
-module two_rounded_corner_trapezoidal_plate(plate_height, plate_major_width, plate_minor_width, plate_thickness, corner_radius)
-{
-    linear_extrude(plate_thickness, center=false, twist=0, $fn=this_fn)
-        hull()
-        {
-            translate([0-((plate_minor_width / 2)+corner_radius), (plate_height / 2)-corner_radius, 0])
-                circle(r=corner_radius, $fn=this_fn);
-            translate([(plate_minor_width / 2)+corner_radius, (plate_height / 2)-corner_radius, 0])
-                circle(r=corner_radius, $fn=this_fn);
-            translate([0-(plate_major_width / 2), 0-(plate_height / 2), 0])
-                circle(r=0.001, $fn=this_fn);
-            translate([(plate_major_width / 2), 0-(plate_height / 2), 0])
                 circle(r=0.001, $fn=this_fn);
         }
 }
@@ -347,129 +337,124 @@ module do_the_thing()
 
 
     //  Time to build the rack cage. Let's get to it!    
-    union()
-    {
-        // Create the faceplate.
-        difference()
+    difference()
         {
-            create_blank_faceplate(rack_width_required, units_required);
-        
-            // Carve out the device area
-            translate([0, 0, (device_depth / 2)])
-                cube([device_width + device_clearance, device_height + device_clearance, device_depth + device_clearance], center=true);
-        }
-            
-        // Create a reinforcing block behind the faceplate centered on where we
-        // will cut out the opening for the device.
-        difference()
-        {
-            translate([0, 0, 7.5 + (heavy_device ? 2:0)])
-                cube([total_width_required, total_height_required, 9], center=true);
-            translate([0, 0, 6.5 + (heavy_device ? 2:0)])
-                cube([device_width + device_clearance, device_height + device_clearance, 12], center=true);
-        }
-        
-        // Create two side plates and carve most of them out for ventillation
-        translate([0-((device_width + device_clearance) / 2) - 4 - heavy_device, 0, ((device_depth + device_clearance) / 2) + 11 + (heavy_device ? 2:0)])
-            rotate([90, 90, 90])
-                difference()
-                {
-                    two_rounded_corner_plate(total_height_required, device_depth, 4 + (heavy_device ? 2:0), support_radius);
-                    
-                    // If the device depth is too shallow, skip the ventillation cutouts.
-                    if (device_depth > 27)
-                    {
-                        translate([4, 0, -1])
-                            four_rounded_corner_plate(device_height - 8, device_depth - 16 - cutout_edge, 6 + (heavy_device ? 2:0), cutout_radius);    
-                    }                
-                }        
-        translate([((device_width + device_clearance) / 2) , 0, ((device_depth + device_clearance) / 2) + 11 + heavy_device])
-            rotate([90, 90, 90])
-                difference()
-                {
-                    two_rounded_corner_plate(total_height_required, device_depth, 4 + (heavy_device ? 2:0), support_radius);
-                    if (device_depth > 27)
-                    {
-                        translate([4, 0, -1])
-                            four_rounded_corner_plate(device_height - 8, device_depth - 16 - cutout_edge, 6 + (heavy_device ? 2:0), cutout_radius);   
-                    }                 
-                }
+            union()
+            {
+                // Create the faceplate.
+                create_blank_faceplate(rack_width_required, units_required);
                 
-        // Create two top/bottom plates and carve most of them out for ventillation
-        translate([0, (device_height + device_clearance) / 2, ((device_depth + device_clearance) / 2) + 11 + heavy_device])
-            rotate([0, 90, 90])
-                difference()
-                {
-                    two_rounded_corner_plate(total_width_required, device_depth, 4 + heavy_device, support_radius);
-                    if (device_depth > 27)
-                    {
-                        if (!extra_support)
+                // Create a reinforcing block behind the faceplate centered on where we
+                // will cut out the opening for the device.
+                translate([0, 0, 7.5 + (heavy_device ? 2:0)])
+                    cube([total_width_required, total_height_required, 9], center=true);
+            
+                // Create two side plates and carve most of them out for ventillation
+                translate([0-((device_width + device_clearance) / 2) - 4 - heavy_device, 0, ((device_depth + device_clearance) / 2) + 11 + (heavy_device ? 2:0) - (device_clearance / 2)])
+                    rotate([90, 90, 90])
+                        difference()
                         {
-                            translate([4, 0, -1])
-                                four_rounded_corner_plate(device_width - 8, device_depth - 16 - cutout_edge, 6 + heavy_device, cutout_radius);      
-                        } else {
-                            translate([4, (device_width - 8) / 4 + 8, -1])
-                                four_rounded_corner_plate((device_width - 8) / 2 - 16, device_depth - 16 - cutout_edge, 6 + heavy_device, cutout_radius);      
-                            translate([4, -(device_width - 8) / 4 - 8, -1])
-                                four_rounded_corner_plate((device_width - 8) / 2 - 16, device_depth - 16 - cutout_edge, 6 + heavy_device, cutout_radius);      
-
+                            two_rounded_corner_plate(total_height_required, device_depth + device_clearance, 4 + (heavy_device ? 2:0), support_radius);
+                            
+                            // If the device depth is too shallow, skip the ventillation cutouts.
+                            if (device_depth > 27)
+                            {
+                                translate([4, 0, -1])
+                                    four_rounded_corner_plate(device_height - 8, device_depth - 16 - cutout_edge, 6 + (heavy_device ? 2:0), cutout_radius);    
+                            }                
+                        }        
+                translate([((device_width + device_clearance) / 2) , 0, ((device_depth + device_clearance) / 2) + 11 + heavy_device - (device_clearance / 2)])
+                    rotate([90, 90, 90])
+                        difference()
+                        {
+                            two_rounded_corner_plate(total_height_required, device_depth + device_clearance, 4 + (heavy_device ? 2:0), support_radius);
+                            if (device_depth > 27)
+                            {
+                                translate([4, 0, -1])
+                                    four_rounded_corner_plate(device_height - 8, device_depth - 16 - cutout_edge, 6 + (heavy_device ? 2:0), cutout_radius);   
+                            }                 
                         }
+                        
+                // Create two top/bottom plates and carve most of them out for ventillation
+                translate([0, (device_height + device_clearance) / 2, ((device_depth + device_clearance) / 2) + 11 + heavy_device - (device_clearance / 2)])
+                    rotate([0, 90, 90])
+                        difference()
+                        {
+                            two_rounded_corner_plate(total_width_required, device_depth + device_clearance, 4 + heavy_device, support_radius);
+                            if (device_depth > 27)
+                            {
+                                if (!extra_support)
+                                {
+                                    translate([4, 0, -1])
+                                        four_rounded_corner_plate(device_width - 8, device_depth - 16 - cutout_edge, 6 + heavy_device, cutout_radius);      
+                                } else {
+                                    translate([4, (device_width - 8) / 4 + 8, -1])
+                                        four_rounded_corner_plate((device_width - 8) / 2 - 16, device_depth - 16 - cutout_edge, 6 + heavy_device, cutout_radius);      
+                                    translate([4, -(device_width - 8) / 4 - 8, -1])
+                                        four_rounded_corner_plate((device_width - 8) / 2 - 16, device_depth - 16 - cutout_edge, 6 + heavy_device, cutout_radius);      
+
+                                }
+                            }
+                        }
+                // Enabling the extra support option adds center supports
+                // and reinforcing structures to the top and bottom.
+                if (extra_support)
+                {
+                    difference()
+                    {
+                        translate([-2 - heavy_device - 10, 0, ((device_depth + device_clearance) / 2) + 11 + (heavy_device ? 2:0) - (device_clearance / 2)])
+                            rotate([90, 90, 90])
+                                two_rounded_corner_plate(total_height_required, device_depth + device_clearance, 4 + (heavy_device ? 2:0), support_radius);
+
+                        translate([0, 0, (device_depth / 2)])
+                            cube([device_width + device_clearance + 1, device_height + device_clearance + 1, device_depth + device_clearance + 50], center=true);
+                    }
+
+                    difference()
+                    {
+                        translate([-2 - heavy_device + 10, 0, ((device_depth + device_clearance) / 2) + 11 + (heavy_device ? 2:0) - (device_clearance / 2)])
+                            rotate([90, 90, 90])
+                                two_rounded_corner_plate(total_height_required, device_depth + device_clearance, 4 + (heavy_device ? 2:0), support_radius);
+
+                        translate([0, 0, (device_depth / 2)])
+                            cube([device_width + device_clearance + 1, device_height + device_clearance + 1, device_depth + device_clearance + 50], center=true);
                     }
                 }
-        // Enabling the extra support option adds center supports
-        // and reinforcing structures to the top and bottom.
-        if (extra_support)
-        {
-            difference()
-            {
-                translate([-2 - heavy_device - 10, 0, ((device_depth + device_clearance) / 2) + 11 + (heavy_device ? 2:0)])
-                    rotate([90, 90, 90])
-                        two_rounded_corner_plate(total_height_required, device_depth, 4 + (heavy_device ? 2:0), support_radius);
-
-                translate([0, 0, (device_depth / 2)])
-                    cube([device_width + device_clearance + 1, device_height + device_clearance + 1, device_depth + device_clearance + 50], center=true);
-            }
-
-            difference()
-            {
-                translate([-2 - heavy_device + 10, 0, ((device_depth + device_clearance) / 2) + 11 + (heavy_device ? 2:0)])
-                    rotate([90, 90, 90])
-                        two_rounded_corner_plate(total_height_required, device_depth, 4 + (heavy_device ? 2:0), support_radius);
-
-                translate([0, 0, (device_depth / 2)])
-                    cube([device_width + device_clearance + 1, device_height + device_clearance + 1, device_depth + device_clearance + 50], center=true);
-            }
-        }
-                
-        translate([0, 0-((device_height + device_clearance) / 2) - 4 - heavy_device, ((device_depth + device_clearance) / 2) + 11 + heavy_device])
-            rotate([0, 90, 90])
-                difference()
-                {
-                    two_rounded_corner_plate(total_width_required, device_depth, 4 + heavy_device, support_radius);
-                    
-                    if (device_depth > 27)
-                    {
-                        if (!extra_support)
+                        
+                translate([0, 0-((device_height + device_clearance) / 2) - 4 - heavy_device, ((device_depth + device_clearance) / 2) + 11 + heavy_device - (device_clearance / 2)])
+                    rotate([0, 90, 90])
+                        difference()
                         {
-                            translate([4, 0, -1])
-                                four_rounded_corner_plate(device_width - 8, device_depth - 16 - cutout_edge, 6 + heavy_device, cutout_radius);      
-                        } else {
-                            translate([4, (device_width - 8) / 4 + 8, -1])
-                                four_rounded_corner_plate((device_width - 8) / 2 - 16, device_depth - 16 - cutout_edge, 6 + heavy_device, cutout_radius);      
-                            translate([4, -(device_width - 8) / 4 - 8, -1])
-                                four_rounded_corner_plate((device_width - 8) / 2 - 16, device_depth - 16 - cutout_edge, 6 + heavy_device, cutout_radius);      
-                        }    
-                    }        
-                }
-        
-        // Create a back plate and carve most of it out for ventillation
-            translate([0, 0, 2 + device_depth + device_clearance + heavy_device])
-                difference()
-                {
-                    cube([device_width + 2, device_height + 2, 4 + heavy_device], center=true);                    
-                    translate([0, 0, -3 -  + (heavy_device ? 1:0)])
-                        four_rounded_corner_plate(device_height - cutout_edge, device_width - cutout_edge, 6 + heavy_device, cutout_radius);
-                }
+                            two_rounded_corner_plate(total_width_required, device_depth + device_clearance, 4 + heavy_device, support_radius);
+                            
+                            if (device_depth > 27)
+                            {
+                                if (!extra_support)
+                                {
+                                    translate([4, 0, -1])
+                                        four_rounded_corner_plate(device_width - 8, device_depth - 16 - cutout_edge, 6 + heavy_device, cutout_radius);      
+                                } else {
+                                    translate([4, (device_width - 8) / 4 + 8, -1])
+                                        four_rounded_corner_plate((device_width - 8) / 2 - 16, device_depth - 16 - cutout_edge, 6 + heavy_device, cutout_radius);      
+                                    translate([4, -(device_width - 8) / 4 - 8, -1])
+                                        four_rounded_corner_plate((device_width - 8) / 2 - 16, device_depth - 16 - cutout_edge, 6 + heavy_device, cutout_radius);      
+                                }    
+                            }        
+                        }
+                
+                // Create a back plate and carve most of it out for ventillation
+                translate([0, 0, 2 + device_depth + device_clearance + heavy_device])
+                    difference()
+                    {
+                        cube([device_width + 2, device_height + 2, 4 + heavy_device], center=true);                    
+                        translate([0, 0, -3 -  + (heavy_device ? 1:0)])
+                            four_rounded_corner_plate(device_height - cutout_edge, device_width - cutout_edge, 6 + heavy_device, cutout_radius);
+                    }
+        }
+                    
+        // Carve out the device area
+        translate([0, 0, -1])
+            cube([device_width + device_clearance, device_height + device_clearance, 50], center=true);
     }
 }
 
