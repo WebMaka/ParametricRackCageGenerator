@@ -1,6 +1,6 @@
 /*
 
- Parametric Rack Cage Generator v. 0.1 (10 Aug 2025)
+ Parametric Rack Cage Generator v. 0.11 (29 Aug 2025)
  --------------------------------------------------------------------------------
  Copyright © 2025 by WebMaka - this file is licensed under CC BY-NC-SA 4.0.
  To view a copy of this license, visit
@@ -10,6 +10,12 @@
  of a given size. Simply provide the device's dimensions, and optionally
  tweak a few settings, then press F6 then F7 to generate and save a STL
  file.
+ 
+ 
+ For the latest version of this file, report bugs, etc., please visit my
+ Github repo:
+ 
+   https://github.com/WebMaka/ParametricRackCageGenerator
 
 
  If this is useful to you, please consider donating or subscribing to my
@@ -24,6 +30,10 @@
  -------------------------------------------------------------------------------- 
  0.1 - 10 Aug 2025 
    Initial Release
+ 
+ 0.11 - 29 Aug 2025
+   - Added support for heat-set threaded inserts on faceplate ears for half-
+     and third-width cages for 19" racks. (Requested by Github user "woolmonkey".)
  
 */
 
@@ -54,6 +64,9 @@ rack_width = 10; // [6,6.33,9.5,10,19]
 
 // Bolt-together faceplate ears - adds a mounting ear on one or both sides for mounting multiple devices into a single 19" wide faceplate - NOTE: For 19" racks, set rack width above to 9.5 for two-part faceplates or 6.33 for three-part faceplates
 bolt_together_faceplate_ears = "None"; // ["None","One Side","Both Sides"]
+
+// Heat-set insert holes - expands hole diameters on bolt-together faceplate ears to allow the use of heat-set threaded inserts instead of raw bolts - NOTE: This setting is only used with bolt-together faceplate ears, and should match the recommended hole diameter of the insert to be used.
+heat_set_holes = 0.00; // [0:"None (5.5mm - M5/10-24)",3.98:"M3 (4mm hole)",4.1:"M3 (4.1mm hole)",4.8:"M3 (4.8mm hole)",5.6:"M4 (5.6mm hole)",5.7:"M4 (5.7mm hole)",6.4:"M5 (6.4mm hole)",5.7:"M5 (6.5mm hole)",8.0:"M6 (8mm hole)",8.1:"M6 (8.1mm hole)",3.98:"4-40 (0.157\" hole)",4.03:"4-40 (0.159\" hole)",4.76:"6-32 (0.1875\" hole)",4.85:"6-32 (0.191\" hole)",5.6:"8-32 (0.221\" hole)",5.74:"8-32 (0.226\" hole)",6.4:"10-24 (0.252\" hole)",6.5:"10-24 (0.256\" hole)",6.4:"10-32 (0.252\" hole)",6.5:"10-32 (0.257\" hole)",6.4:"10-32 (0.252\" hole)",6.5:"10-32 (0.257\" hole)",8.0:"1/4-20 (0.315\" hole)",8.1:"1/4-20 (0.319\" hole)"]
 
 // Heavy device - thickens all surfaces to support additional weight
 heavy_device = 0; // [0,1,2]
@@ -151,9 +164,9 @@ module create_blank_faceplate(desired_width, unit_height)
             union()
             {
                 two_rounded_corner_plate(unit_height * 44.45, desired_width * 25.4, 4 + heavy_device, faceplate_radius);
-                translate([((desired_width * 25.4) / 2) - (4 + heavy_device), 0,  14 + heavy_device - 1])
+                translate([((desired_width * 25.4) / 2) - (4 + heavy_device) - (heat_set_holes == 0.00 ? 0:2), 0,  14 + heavy_device - 1])
                     rotate([0, 90, 0])
-                        two_rounded_corner_plate(unit_height * 44.45, 21, 4 + heavy_device, 5);
+                        two_rounded_corner_plate(unit_height * 44.45, 21, 4 + heavy_device + (heat_set_holes == 0.00 ? 0:2), 5);
             }
         }
         if (bolt_together_faceplate_ears == "Both Sides")
@@ -161,12 +174,12 @@ module create_blank_faceplate(desired_width, unit_height)
             union()
             {
                 four_rounded_corner_plate(unit_height * 44.45, desired_width * 25.4, 4 + heavy_device, 0.001);
-                translate([((desired_width * 25.4) / 2) - (4 + heavy_device), 0,  14 + heavy_device - 1])
+                translate([((desired_width * 25.4) / 2) - (4 + heavy_device) - (heat_set_holes == 0.00 ? 0:2), 0,  14 + heavy_device - 1])
                     rotate([0, 90, 0])
-                        two_rounded_corner_plate(unit_height * 44.45, 21, 4 + heavy_device, 5);
+                        two_rounded_corner_plate(unit_height * 44.45, 21, 4 + heavy_device + (heat_set_holes == 0.00 ? 0:2), 5);
                 translate([0-((desired_width * 25.4) / 2), 0,  14 + heavy_device - 1])
                     rotate([0, 90, 0])
-                        two_rounded_corner_plate(unit_height * 44.45, 21, 4 + heavy_device, 5);
+                        two_rounded_corner_plate(unit_height * 44.45, 21, 4 + heavy_device + (heat_set_holes == 0.00 ? 0:2), 5);
             }
         }
         
@@ -188,15 +201,31 @@ module create_blank_faceplate(desired_width, unit_height)
                 translate([0-((desired_width * 25.4) / 2) - 11, (unit_number * 44.45) - ((unit_height * 44.45) / 2) + 6.35, 14 + heavy_device])
                     rotate([0, 90, 0])
                         linear_extrude(22, center=false, twist=0, $fn=this_fn)
-                            circle(d=5.5, $fn=this_fn, false);
+                            // Heat-set threaded inserts will have larger hole diameters to clear the insert, so scale the holes accordingly as required.
+                            if (heat_set_holes == 0.00)
+                            {
+                                circle(d=5.5, $fn=this_fn, false);
+                            } else {
+                                circle(d=heat_set_holes, $fn=this_fn, false);
+                            }
                 translate([0-((desired_width * 25.4) / 2) - 8, (unit_number * 44.45) - ((unit_height * 44.45) / 2) + 22.225, 14 + heavy_device])
                     rotate([0, 90, 0])
                         linear_extrude(22, center=false, twist=0, $fn=this_fn)
-                            circle(d=5.5, $fn=this_fn, false);
+                            if (heat_set_holes == 0.00)
+                            {
+                                circle(d=5.5, $fn=this_fn, false);
+                            } else {
+                                circle(d=heat_set_holes, $fn=this_fn, false);
+                            }
                 translate([0-((desired_width * 25.4) / 2) - 8, (unit_number * 44.45) - ((unit_height * 44.45) / 2) + 38.1, 14 + heavy_device])
                     rotate([0, 90, 0])
                         linear_extrude(22, center=false, twist=0, $fn=this_fn)
-                            circle(d=5.5, $fn=this_fn, false);
+                            if (heat_set_holes == 0.00)
+                            {
+                                circle(d=5.5, $fn=this_fn, false);
+                            } else {
+                                circle(d=heat_set_holes, $fn=this_fn, false);
+                            }
             }
 
             if (bolt_together_faceplate_ears == "None")
@@ -213,15 +242,30 @@ module create_blank_faceplate(desired_width, unit_height)
                 translate([((desired_width * 25.4) / 2) - 11, (unit_number * 44.45) - ((unit_height * 44.45) / 2) + 6.35, 14 + heavy_device])
                     rotate([0, 90, 0])
                         linear_extrude(22, center=false, twist=0, $fn=this_fn)
-                            circle(d=5.5, $fn=this_fn, false);
+                            if (heat_set_holes == 0.00)
+                            {
+                                circle(d=5.5, $fn=this_fn, false);
+                            } else {
+                                circle(d=heat_set_holes, $fn=this_fn, false);
+                            }
                 translate([((desired_width * 25.4) / 2) - 8, (unit_number * 44.45) - ((unit_height * 44.45) / 2) + 22.225, 14 + heavy_device])
                     rotate([0, 90, 0])
                         linear_extrude(22, center=false, twist=0, $fn=this_fn)
-                            circle(d=5.5, $fn=this_fn, false);
+                            if (heat_set_holes == 0.00)
+                            {
+                                circle(d=5.5, $fn=this_fn, false);
+                            } else {
+                                circle(d=heat_set_holes, $fn=this_fn, false);
+                            }
                 translate([((desired_width * 25.4) / 2) - 8, (unit_number * 44.45) - ((unit_height * 44.45) / 2) + 38.1, 14 + heavy_device])
                     rotate([0, 90, 0])
                         linear_extrude(22, center=false, twist=0, $fn=this_fn)
-                            circle(d=5.5, $fn=this_fn, false);
+                            if (heat_set_holes == 0.00)
+                            {
+                                circle(d=5.5, $fn=this_fn, false);
+                            } else {
+                                circle(d=heat_set_holes, $fn=this_fn, false);
+                            }
             }            
         }
     }
