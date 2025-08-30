@@ -12,6 +12,18 @@ Quickly create a 3D-printable object file for a rack cage for any device of a gi
    https://patreon.com/webmaka
 
  
+ ## Patch Notes
+ 
+ 0.1 - 10 Aug 2025 
+ * Initial Release
+ 
+ 0.11 - 29 Aug 2025
+ * Added support for heat-set threaded inserts on faceplate ears for half- and third-width cages for 19" racks. (Requested by Github user "woolmonkey".)
+ 
+ 0.12 - 30 Aug 2025
+* Added support for half-height cages as well as half-width for 10" racks. (Requested by Github user "FlyingT".)
+
+
 
 ## Features
 
@@ -24,7 +36,8 @@ Quickly create a 3D-printable object file for a rack cage for any device of a gi
 *    The script currently does not generate custom faceplate cutouts like connector holes, keystone jacks, ventilation holes/slots, etc. I may add that in the future if there's interest, but in the meantime it's still perfectly usable for things that are in their own enclosures, so while it won't make a fancy three-part 19" rack cage for your triple-Raspberry-Pi cluster that only exposes the connectors, it can make three bolt-together cage segments for a trio of Pis in cases.
 *    The device is centered on the faceplate in both axes. There's no up/top or down/bottom - the cage is symmetrical.
 *    Intended for light duty use only - I've tested it with 5kg/12 lb. devices, but it's not intended to generate cages to hold things like big drive arrays and what not. However, for things like networking gear or SFF PCs (read: basically most common homelab/minilab gear) it should be great.
-*    Can generate half- and third-width bolt-together subpanels for 19" racks. Due to standards-matching on dimensions/holes, you can mix-and-match things of the same width, e.g., a 2U half-width on one side with two 1U half-widths on the other holding three different devices of different sizes. (Again, device height will determine unit height and there are maximums on width.)
+*    Can generate half- and third-width bolt-together subpanels for 19" racks, and half-width subpanels for 10" racks. Due to standards-matching on dimensions/holes, you can mix-and-match things of the same width, e.g., a 2U half-width on one side with two 1U half-widths on the other holding three different devices of different sizes. (Again, device height will determine unit height and there are maximums on width.)
+*    Can optionally generate cages with half-unit heights for small enough devices. This allows for more compact setups, especially on 10" racks where having to use a 2U cage for a device that would fit in 1.5U results in a lot of wasted space. This is great for mounting small enclosed devices like Raspbery Pis, as two in their own cases can fit side-by-side in 1.5U on a 10" rack. (NOTE: This option is disabled by default, which means that the script defaults to selecting heights as multiples of a full unit. Enabling this option also makes cages vertically asymmetrical, which means that if you use two x.5U cages the lower one will have to be physically rotated 180&deg; to align with the rack's mounting bolt holes.)
 *    Default thickness of the faceplate and structural components is 4mm, but it can be thickened to 5mm or 6mm for heavier objects. I also have an option to add additional anti-sagging supports at the top and bottom for things that have a bit more weight to them.
 
 
