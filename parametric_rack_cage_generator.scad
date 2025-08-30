@@ -1,6 +1,6 @@
 /*
 
- Parametric Rack Cage Generator v. 0.11 (29 Aug 2025)
+ Parametric Rack Cage Generator v. 0.12 (30 Aug 2025)
  --------------------------------------------------------------------------------
  Copyright © 2025 by WebMaka - this file is licensed under CC BY-NC-SA 4.0.
  To view a copy of this license, visit
@@ -35,6 +35,9 @@
    - Added support for heat-set threaded inserts on faceplate ears for half-
      and third-width cages for 19" racks. (Requested by Github user "woolmonkey".)
  
+ 0.12 - 30 Aug 2025
+   - Added support for half-height cages as well as half-width for 10" racks.
+     (Requested by Github user "FlyingT".)
 */
 
 
@@ -56,11 +59,13 @@ device_height = 45.0; // [0::200]
 device_clearance = 1; // [0.0:0.25:5.0]
 
 
-
 /* [Options] */
 
-// Rack width (inches) - NOTE: 6.33" and 9.5" are 1/3-width and 1/2-width for a 19" rack. Use in conjunction with the bolt-together faceplate option below.
-rack_width = 10; // [6,6.33,9.5,10,19]
+// Allow half-unit heights - by default, height scales in even unit increments, but this setting enables half-heights, which might be useful for small devices in compact miniracks
+allow_half_heights = false; 
+
+// Rack width (inches) - NOTE: 5" is 1/2-width for a 10" rack, and 6.33" and 9.5" are 1/3-width and 1/2-width for a 19" rack. Use in conjunction with the bolt-together faceplate option below.
+rack_width = 10; // [5,6,6.33,9.5,10,19]
 
 // Bolt-together faceplate ears - adds a mounting ear on one or both sides for mounting multiple devices into a single 19" wide faceplate - NOTE: For 19" racks, set rack width above to 9.5 for two-part faceplates or 6.33 for three-part faceplates
 bolt_together_faceplate_ears = "None"; // ["None","One Side","Both Sides"]
@@ -284,7 +289,7 @@ module do_the_thing()
     // the device and provide at least 10mm of clearance above/below for support
     // structure.
     total_height_required = device_height + 20;
-    units_required = ceil(total_height_required / 44.45);
+    units_required = (ceil(total_height_required * (allow_half_heights ? 2:1) / 44.45)) / (allow_half_heights ? 2:1);
     
     // Calculate whether the device will fit within the INTERNAL width for the
     // given rack width, again allowing at least 10mm of clearance on each side
@@ -296,6 +301,7 @@ module do_the_thing()
     // conditional additions, because of how OpenSCAD handles variables.
     total_width_required = device_width + 20;    
     rack_width_required = rack_width + 
+      (((rack_width == 5) && (total_width_required > 93) && (total_width_required <= 220)) ? 5:0) + // Too wide for 1/2-rack @ 10" but not too wide for 10"
       (((rack_width == 6) && (total_width_required > 120) && (total_width_required <= 220)) ? 4:0) + // Too wide for 6" but not too wide for 10"
       (((rack_width == 6) && (total_width_required > 220) && (total_width_required < 220)) ? 13:0) + // Too wide for both 6" and 10"
    
@@ -345,7 +351,7 @@ module do_the_thing()
     // Warn the user if the rack is set to a 1/2- or 1/3-width @ 19" but
     // no ears are enabled.
     if (
-        ((rack_width_required == 6.33) || (rack_width_required == 9.5)) 
+        ((rack_width_required == 5) || (rack_width_required == 6.33) || (rack_width_required == 9.5)) 
         &&
         (bolt_together_faceplate_ears == "None")
        )
@@ -360,10 +366,10 @@ module do_the_thing()
         echo();
     }
 
-    // Warn the user if the rack is set to 1/2-width @ 19" but both ears
+    // Warn the user if the rack is set to 1/2-width @ 10"/19" but both ears
     // are enabled.
     if (
-        (rack_width_required == 9.5)
+        ((rack_width_required == 5) || (rack_width_required == 9.5))
         &&
         (bolt_together_faceplate_ears == "Both Sides")
        )
@@ -371,7 +377,7 @@ module do_the_thing()
         echo();
         echo();
         echo(" * * * WARNING! * * *");
-        echo(" Rack width is set to 1/2-width for a 19\" rack, but bolt-together faceplate");
+        echo(" Rack width is set to 1/2-width for a 10\" or 19\" rack, but bolt-together faceplate");
         echo(" ears are enabled on both sides. This is probably not desireable.");
         echo(" Double-check your settings, especially for bolt-together faceplates.");
         echo();
