@@ -11,6 +11,8 @@ Quickly create a 3D-printable object file for a rack cage for any device of a gi
  
    https://patreon.com/webmaka
 
+<img width="903" height="656" alt="Screenshot 2025-09-05 at 09 23 32" src="https://github.com/user-attachments/assets/589ec645-43df-4a4c-9972-14f799e6bf73" />
+
  
  ## Patch Notes
  
